@@ -1,0 +1,82 @@
+name: Build IPA
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      bundle_id:
+        description: "Bundle ID"
+        required: false
+        default: "com.example.massagejournal"
+
+env:
+  SCHEME: MassageJournal
+  PROJECT: MassageJournal.xcodeproj
+  APP_NAME: MassageJournal
+
+jobs:
+  build:
+    name: Unsigned .ipa
+    runs-on: macos-14
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Archive (unsigned)
+        env:
+          BUNDLE_ID: ${{ github.event.inputs.bundle_id || 'com.example.massagejournal' }}
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project "$PROJECT" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/$APP_NAME.xcarchive" \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            archive
+
+      - name: Package unsigned IPA
+        run: |
+          set -euo pipefail
+          APP_PATH="$RUNNER_TEMP/$APP_NAME.xcarchive/Products/Applications/$APP_NAME.app"
+          test -d "$APP_PATH" || { echo "app not found: $APP_PATH"; exit 1; }
+          lipo -info "$APP_PATH/$APP_NAME"
+          mkdir -p "$RUNNER_TEMP/Payload"
+          cp -R "$APP_PATH" "$RUNNER_TEMP/Payload/"
+          cd "$RUNNER_TEMP"
+          zip -qry "$APP_NAME-unsigned.ipa" Payload
+          ls -lh "$APP_NAME-unsigned.ipa"
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-unsigned-ipa
+          path: ${{ runner.temp }}/${{ env.APP_NAME }}-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload xcarchive on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-xcarchive-debug
+          path: ${{ runner.temp }}/${{ env.APP_NAME }}.xcarchive
+          if-no-files-found: ignore
+          retention-days: 7

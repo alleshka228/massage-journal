@@ -1,0 +1,23 @@
+# Xcode
+build/
+DerivedData/
+*.xcarchive
+*.xcuserstate
+xcuserdata/
+MassageJournal.xcodeproj/
+MassageJournal.xcworkspace/
+
+# Артефакты
+*.ipa
+Payload/
+
+# Подпись — никогда не коммитим
+*.p12
+*.mobileprovision
+.signing/
+password*.txt
+
+# Прочее
+.DS_Store
+__pycache__/
+*.pyc
