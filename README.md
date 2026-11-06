@@ -75,6 +75,38 @@ zsign.exe -k cert.p12 -p <пароль> -m profile.mobileprovision -o MassageJou
 python -m pymobiledevice3 apps install MassageJournal-signed.ipa
 ```
 
+## Посмотреть приложение без телефона и без Mac
+
+Эмулятора iOS на Windows не существует: симулятор живёт только внутри Xcode, а Xcode — только на macOS.
+Поэтому проверка сделана через **настоящий iOS-симулятор в облаке**: workflow `screenshots.yml`
+собирает приложение под симулятор, запускает его и снимает экраны.
+
+```bash
+gh workflow run screenshots.yml
+gh run watch
+gh run download -n simulator-screenshots -D screenshots
+```
+
+Что получается на выходе:
+
+- `01-empty.png` — пустая смена (как выглядит перед началом дня);
+- `02-filled.png` — смена с записями (демо-данные);
+- `03-afternoon.png` — прокрутка к вечерним ячейкам.
+
+Чтобы включить демо-данные вручную (в симуляторе или на телефоне по Xcode), приложение запускается с аргументами:
+
+```
+-demoData              заполнить смену примерами
+-scrollTo 18           при открытии прокрутить к ячейке №18
+```
+
+В обычном запуске (с иконки) этих аргументов нет — приложение открывается на текущем времени и с реальными данными.
+
+Если нужен **интерактивный** симулятор (тапать, вводить текст, смотреть правки вживую) — это только macOS.
+Самый дешёвый вариант — арендовать Mac в облаке на час (MacinCloud, Scaleway Mac mini, ~$1/час):
+там `xcodegen generate`, `open MassageJournal.xcodeproj`, ⌘R — и симулятор с горячей перезагрузкой.
+
+
 Важно: `runs-on` в workflow зафиксирован на `macos-15-intel`, а в `project.yml` стоит `projectFormat: xcode15_3` —
 оба пункта появились из-за реальных ошибок: arm64-раннеры аккаунту недоступны
 (`The configuration 'macos-14-arm64-us-default' is not supported`, задание отменяется за 3 секунды),

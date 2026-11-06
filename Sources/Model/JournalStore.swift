@@ -79,8 +79,11 @@ final class JournalStore: ObservableObject {
     var dayTitle: String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ru_RU")
-        formatter.dateFormat = "EEEE, d MMMM"
-        return formatter.string(from: day).capitalized
+        // Шаблон, а не жёсткий dateFormat: иначе месяц выходит в именительном падеже («6 ноябрь»)
+        formatter.setLocalizedDateFormatFromTemplate("EEEEdMMMM")
+        let text = formatter.string(from: day)
+        guard let first = text.first else { return text }
+        return first.uppercased() + text.dropFirst()
     }
 
     func shift(by offset: Int) {

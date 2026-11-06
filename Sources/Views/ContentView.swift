@@ -13,7 +13,13 @@ struct ContentView: View {
                 // Дата всегда на виду, даже когда список прокручен
                 DayHeader(store: store)
                     .padding(.horizontal, 14)
-                    .padding(.bottom, 2)
+                    .padding(.bottom, 6)
+                    .background(background)
+                    .overlay(alignment: .bottom) {
+                        Rectangle()
+                            .fill(Color.black.opacity(0.07))
+                            .frame(height: 0.5)
+                    }
 
                 ScrollViewReader { proxy in
                     ScrollView {
