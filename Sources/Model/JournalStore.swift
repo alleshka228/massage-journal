@@ -42,7 +42,11 @@ final class JournalStore: ObservableObject {
             (3, "Смирнова", .lowerBack, "2800"),
             (4, "Кузнецов", .neckChest, "2600"),
             (6, "Попова", .spine, "3200"),
-            (7, "Соколов", .backAndLowerBack, "3500")
+            (7, "Соколов", .backAndLowerBack, "3500"),
+            (16, "Морозова", .shvz, "2700"),
+            (18, "Волков", .back, "3100"),
+            (20, "Зайцева", .lowerBack, "2900"),
+            (22, "Лебедев", .neckChest, "3300")
         ]
         for item in demo where item.0 < slots.count {
             slots[item.0].client = item.1

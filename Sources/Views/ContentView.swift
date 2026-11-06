@@ -9,38 +9,43 @@ struct ContentView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollViewReader { proxy in
-                ScrollView {
-                    VStack(spacing: 10) {
-                        DayHeader(store: store)
-
-                        ForEach(store.slots.indices, id: \.self) { index in
-                            SlotRow(
-                                slot: $store.slots[index],
-                                time: store.timeLabel(index: index),
-                                endTime: store.endLabel(index: index)
-                            )
-                            .id(index)
-                        }
-
-                        Text("Смена \(ShiftConfig.shiftTitle) · \(ShiftConfig.slotCount) ячеек по \(ShiftConfig.slotMinutes) минут")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .padding(.top, 8)
-                    }
+            VStack(spacing: 0) {
+                // Дата всегда на виду, даже когда список прокручен
+                DayHeader(store: store)
                     .padding(.horizontal, 14)
-                    .padding(.top, 4)
-                    .padding(.bottom, 20)
-                }
-                .background(background.ignoresSafeArea())
-                .scrollDismissesKeyboard(.interactively)
-                .onAppear { scrollToCurrentSlot(proxy) }
-                .onChange(of: store.day) { _ in
-                    withAnimation {
-                        proxy.scrollTo(0, anchor: .top)
+                    .padding(.bottom, 2)
+
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(spacing: 10) {
+                            ForEach(store.slots.indices, id: \.self) { index in
+                                SlotRow(
+                                    slot: $store.slots[index],
+                                    time: store.timeLabel(index: index),
+                                    endTime: store.endLabel(index: index)
+                                )
+                                .id(index)
+                            }
+
+                            Text("Смена \(ShiftConfig.shiftTitle) · \(ShiftConfig.slotCount) ячеек по \(ShiftConfig.slotMinutes) минут")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                                .padding(.top, 8)
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.top, 4)
+                        .padding(.bottom, 20)
+                    }
+                    .scrollDismissesKeyboard(.interactively)
+                    .onAppear { scrollToCurrentSlot(proxy) }
+                    .onChange(of: store.day) { _ in
+                        withAnimation {
+                            proxy.scrollTo(0, anchor: .top)
+                        }
                     }
                 }
             }
+            .background(background.ignoresSafeArea())
             .navigationTitle("Смена")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
