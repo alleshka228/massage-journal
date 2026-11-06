@@ -24,7 +24,32 @@ final class JournalStore: ObservableObject {
             days = saved
         }
         slots = days[key(for: day)] ?? Self.makeSlots()
+
+        // Демо-данные для скриншотов из симулятора: приложение запускается с аргументом -demoData
+        if ProcessInfo.processInfo.arguments.contains("-demoData") {
+            slots = Self.demoSlots()
+        }
+
         isReady = true
+    }
+
+    /// Пример заполненной смены — только для запуска с флагом -demoData.
+    static func demoSlots() -> [Slot] {
+        var slots = makeSlots()
+        let demo: [(Int, String, MassageZone, String)] = [
+            (0, "Иванова", .shvz, "2500"),
+            (1, "Петров", .back, "3000"),
+            (3, "Смирнова", .lowerBack, "2800"),
+            (4, "Кузнецов", .neckChest, "2600"),
+            (6, "Попова", .spine, "3200"),
+            (7, "Соколов", .backAndLowerBack, "3500")
+        ]
+        for item in demo where item.0 < slots.count {
+            slots[item.0].client = item.1
+            slots[item.0].zone = item.2
+            slots[item.0].price = item.3
+        }
+        return slots
     }
 
     // MARK: - Итоги

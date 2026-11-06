@@ -1,0 +1,93 @@
+name: Screenshots
+
+on:
+  workflow_dispatch:
+
+jobs:
+  screenshots:
+    name: iOS Simulator screenshots
+    runs-on: macos-15-intel
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Pick an iPhone simulator
+        id: sim
+        run: |
+          UDID=$(xcrun simctl list devices available -j \
+            | jq -r '[.devices[][] | select(.name | test("iPhone"))][0].udid')
+          if [ -z "$UDID" ] || [ "$UDID" = "null" ]; then
+            echo "no iPhone simulator found"
+            xcrun simctl list devices available
+            exit 1
+          fi
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          xcrun simctl list devices available | head -30
+
+      - name: Boot simulator
+        run: |
+          UDID="${{ steps.sim.outputs.udid }}"
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
+
+      - name: Build for simulator
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project MassageJournal.xcodeproj \
+            -scheme MassageJournal \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -derivedDataPath build/DerivedData \
+            build
+
+      - name: Install app
+        run: |
+          UDID="${{ steps.sim.outputs.udid }}"
+          APP="build/DerivedData/Build/Products/Debug-iphonesimulator/MassageJournal.app"
+          test -d "$APP" || { echo "app not found: $APP"; find build -name "*.app" -maxdepth 6; exit 1; }
+          xcrun simctl install "$UDID" "$APP"
+
+      - name: Screenshot — empty shift
+        run: |
+          UDID="${{ steps.sim.outputs.udid }}"
+          xcrun simctl terminate "$UDID" com.example.massagejournal || true
+          xcrun simctl launch "$UDID" com.example.massagejournal
+          sleep 4
+          xcrun simctl io "$UDID" screenshot 01-empty.png
+          ls -lh 01-empty.png
+
+      - name: Screenshot — filled shift
+        run: |
+          UDID="${{ steps.sim.outputs.udid }}"
+          xcrun simctl terminate "$UDID" com.example.massagejournal || true
+          xcrun simctl launch "$UDID" com.example.massagejournal -demoData
+          sleep 4
+          xcrun simctl io "$UDID" screenshot 02-filled.png
+          ls -lh 02-filled.png
+
+      - name: Screenshot — scrolled to afternoon
+        run: |
+          UDID="${{ steps.sim.outputs.udid }}"
+          xcrun simctl terminate "$UDID" com.example.massagejournal || true
+          xcrun simctl launch "$UDID" com.example.massagejournal -demoData -scrollTo 20
+          sleep 4
+          xcrun simctl io "$UDID" screenshot 03-afternoon.png
+          ls -lh 03-afternoon.png
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulator-screenshots
+          path: "*.png"
+          if-no-files-found: error
+          retention-days: 30

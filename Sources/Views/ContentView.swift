@@ -76,14 +76,25 @@ struct ContentView: View {
     }
 
     private func scrollToCurrentSlot(_ proxy: ScrollViewProxy) {
-        let parts = Calendar.current.dateComponents([.hour, .minute], from: Date())
-        let minutes = (parts.hour ?? 0) * 60 + (parts.minute ?? 0)
-        let index = (minutes - ShiftConfig.startTotalMinutes) / ShiftConfig.slotMinutes
+        let index = initialSlotIndex()
         guard index >= 0, index < store.slots.count else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
             withAnimation(.easeInOut) {
                 proxy.scrollTo(index, anchor: .center)
             }
         }
+    }
+
+    /// Куда прокрутить при открытии: текущее время, либо индекс из аргумента -scrollTo (для скриншотов).
+    private func initialSlotIndex() -> Int {
+        let arguments = ProcessInfo.processInfo.arguments
+        if let flag = arguments.firstIndex(of: "-scrollTo"),
+           flag + 1 < arguments.count,
+           let index = Int(arguments[flag + 1]) {
+            return index
+        }
+        let parts = Calendar.current.dateComponents([.hour, .minute], from: Date())
+        let minutes = (parts.hour ?? 0) * 60 + (parts.minute ?? 0)
+        return (minutes - ShiftConfig.startTotalMinutes) / ShiftConfig.slotMinutes
     }
 }
