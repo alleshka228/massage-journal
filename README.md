@@ -75,8 +75,10 @@ zsign.exe -k cert.p12 -p <пароль> -m profile.mobileprovision -o MassageJou
 python -m pymobiledevice3 apps install MassageJournal-signed.ipa
 ```
 
-Важно: `runs-on` в workflow зафиксирован на `macos-14`, а в `project.yml` стоит `projectFormat: xcode15_3` —
-оба пункта появились из-за реальных ошибок (очередь `macos-latest` и «future Xcode project file format (77)»).
+Важно: `runs-on` в workflow зафиксирован на `macos-15-intel`, а в `project.yml` стоит `projectFormat: xcode15_3` —
+оба пункта появились из-за реальных ошибок: arm64-раннеры аккаунту недоступны
+(`The configuration 'macos-14-arm64-us-default' is not supported`, задание отменяется за 3 секунды),
+а свежий XcodeGen пишет формат Xcode 16, который Xcode 15 не открывает.
 
 ## Что стоит знать
 
