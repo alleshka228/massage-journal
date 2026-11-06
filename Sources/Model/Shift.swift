@@ -8,6 +8,9 @@ enum MassageZone: String, CaseIterable, Codable, Identifiable {
     case spine = "ПОЗВОНОЧНИК"
     case neckChest = "ШЕЙНО-ГРУДНОЙ"
     case backAndLowerBack = "СПИНА+ПОЯСНИЦА"
+    case arm = "РУКА"
+    case leg = "НОГА"
+    case lowerBackAndLeg = "ПОЯСНИЦА+НОГА"
 
     var id: String { rawValue }
 }
@@ -17,15 +20,15 @@ enum ShiftConfig {
     static let startHour = 8
     static let startMinute = 0
 
-    static let endHour = 21
-    static let endMinute = 30
+    static let endHour = 22
+    static let endMinute = 0
 
     static let slotMinutes = 30
 
     static var startTotalMinutes: Int { startHour * 60 + startMinute }
     static var endTotalMinutes: Int { endHour * 60 + endMinute }
 
-    /// 08:00–21:30 с шагом 30 минут = 27 ячеек.
+    /// 08:00–22:00 с шагом 30 минут = 28 ячеек.
     static var slotCount: Int {
         max(1, (endTotalMinutes - startTotalMinutes) / slotMinutes)
     }

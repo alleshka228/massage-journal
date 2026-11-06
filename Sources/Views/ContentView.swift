@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var store = JournalStore()
-    @State private var showsClearConfirm = false
+    @State private var showsCalendar = false
 
     private let accent = Color(red: 0.05, green: 0.45, blue: 0.41)
     private let background = Color(red: 0.95, green: 0.96, blue: 0.96)
@@ -33,17 +33,23 @@ struct ContentView: View {
                                 .id(index)
                             }
 
-                            Text("Смена \(ShiftConfig.shiftTitle) · \(ShiftConfig.slotCount) ячеек по \(ShiftConfig.slotMinutes) минут")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                                .padding(.top, 8)
+                            footer
+                                .padding(.top, 6)
                         }
                         .padding(.horizontal, 14)
                         .padding(.top, 4)
                         .padding(.bottom, 20)
                     }
                     .scrollDismissesKeyboard(.interactively)
-                    .onAppear { scrollToCurrentSlot(proxy) }
+                    .onAppear {
+                        scrollToCurrentSlot(proxy)
+                        // Для скриншотов из симулятора: сразу открыть календарь
+                        if ProcessInfo.processInfo.arguments.contains("-showCalendar") {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                                showsCalendar = true
+                            }
+                        }
+                    }
                     .onChange(of: store.day) { _ in
                         withAnimation {
                             proxy.scrollTo(0, anchor: .top)
@@ -57,11 +63,11 @@ struct ContentView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
-                        showsClearConfirm = true
+                        showsCalendar = true
                     } label: {
-                        Image(systemName: "trash")
+                        Image(systemName: "calendar")
                     }
-                    .accessibilityLabel("Очистить день")
+                    .accessibilityLabel("Выбрать день в календаре")
                 }
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
@@ -70,20 +76,22 @@ struct ContentView: View {
                     }
                 }
             }
+            .sheet(isPresented: $showsCalendar) {
+                CalendarSheet(store: store)
+            }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 TotalsBar(store: store)
             }
         }
         .tint(accent)
-        .alert("Очистить день?", isPresented: $showsClearConfirm) {
-            Button("Отмена", role: .cancel) {}
-            Button("Очистить", role: .destructive) {
-                store.clearDay()
-                Haptics.warning()
-            }
-        } message: {
-            Text("Все записи за \(store.dayTitle.lowercased()) будут удалены. Вернуть их будет нельзя.")
-        }
+    }
+
+    private var footer: some View {
+        Text("Смена \(ShiftConfig.shiftTitle) · \(ShiftConfig.slotCount) ячеек по \(ShiftConfig.slotMinutes) минут")
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity)
     }
 
     private func scrollToCurrentSlot(_ proxy: ScrollViewProxy) {

@@ -46,7 +46,8 @@ final class JournalStore: ObservableObject {
             (16, "Морозова", .shvz, "2700"),
             (18, "Волков", .back, "3100"),
             (20, "Зайцева", .lowerBack, "2900"),
-            (22, "Лебедев", .neckChest, "3300")
+            (22, "Лебедев", .neckChest, "3300"),
+            (27, "Орлов", .leg, "2400")
         ]
         for item in demo where item.0 < slots.count {
             slots[item.0].client = item.1
@@ -93,13 +94,13 @@ final class JournalStore: ObservableObject {
     }
 
     func goToToday() {
-        day = calendar.startOfDay(for: Date())
-        slots = days[key(for: day)] ?? Self.makeSlots()
+        go(to: Date())
     }
 
-    /// Сброс текущего дня перед новой сменой.
-    func clearDay() {
-        slots = Self.makeSlots()
+    /// Переход к произвольному дню из календаря.
+    func go(to date: Date) {
+        day = calendar.startOfDay(for: date)
+        slots = days[key(for: day)] ?? Self.makeSlots()
     }
 
     // MARK: - Время ячеек

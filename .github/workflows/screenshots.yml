@@ -84,6 +84,24 @@ jobs:
           xcrun simctl io "$UDID" screenshot 03-afternoon.png
           ls -lh 03-afternoon.png
 
+      - name: Screenshot — last slot of the shift
+        run: |
+          UDID="${{ steps.sim.outputs.udid }}"
+          xcrun simctl terminate "$UDID" com.example.massagejournal || true
+          xcrun simctl launch "$UDID" com.example.massagejournal -demoData -scrollTo 27
+          sleep 8
+          xcrun simctl io "$UDID" screenshot 04-last-slot.png
+          ls -lh 04-last-slot.png
+
+      - name: Screenshot — calendar sheet
+        run: |
+          UDID="${{ steps.sim.outputs.udid }}"
+          xcrun simctl terminate "$UDID" com.example.massagejournal || true
+          xcrun simctl launch "$UDID" com.example.massagejournal -showCalendar
+          sleep 10
+          xcrun simctl io "$UDID" screenshot 05-calendar.png
+          ls -lh 05-calendar.png
+
       - name: Upload screenshots
         uses: actions/upload-artifact@v4
         with:
